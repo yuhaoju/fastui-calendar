@@ -1,0 +1,26 @@
+{
+  "name": "fastui-calendar",
+  "version": "0.0.1",
+  "description": "react bative calendar component",
+  "main": "index.js",
+  "scripts": {
+    "test": "\"echo \\\"Error: no test specified\\\" && exit 1\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roscoe054/fastui-calendar.git"
+  },
+  "keywords": [
+    "carousel",
+    "react native"
+  ],
+  "author": "roscoe054",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/roscoe054/fastui-calendar/issues"
+  },
+  "homepage": "https://github.com/roscoe054/fastui-calendar",
+  "dependencies": {
+    "moment": "^2.11.1"
+  }
+}
