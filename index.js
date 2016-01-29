@@ -158,7 +158,7 @@ class Calendar extends Component {
         return (
             <View style={styles.container}>
                 <CalendarHeader />
-                <ScrollView stickyHeaderIndices={stickyHeaderIndices}>
+                <ScrollView stickyHeaderIndices={stickyHeaderIndices} automaticallyAdjustContentInsets={false}>
                     {months.map((monthItem, i) =>
                         monthItem.type === 'header'
                         ? <MonthHeader key={i} year={monthItem.year} month={monthItem.month}/>
