@@ -13,9 +13,10 @@ npm install fastui-calendar
 ```javascript
 'use strict';
 
-import React, {AppRegistry, StyleSheet, View} from 'react-native';
-
+import React, {AppRegistry, StyleSheet, View, StatusBarIOS} from 'react-native';
 const Calendar = require('./fastui-calendar');
+
+StatusBarIOS.setHidden(true);
 
 class CalendarDemo extends Component {
     render() {
