@@ -1,5 +1,5 @@
 # fastui-calendar
-A calendar component built with react native . **All components as seen in [fastui](https://github.com/RubyLouvre/fastui).**
+A calendar component built with React Native . **All components as seen in [fastui](https://github.com/roscoe054/fastui).**
 
 ## Demo
 ![](https://raw.githubusercontent.com/roscoe054/fastui-calendar/master/demo.gif)
