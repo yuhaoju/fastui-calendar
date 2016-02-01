@@ -1,6 +1,6 @@
 'use strict'
 
-import React, {Component, StyleSheet, Text, View, PixelRatio, Dimensions, ScrollView, TouchableOpacity} from 'react-native'
+import React, {Component, StyleSheet, Text, View, PixelRatio, Dimensions, TouchableOpacity, ListView} from 'react-native'
 import moment from 'moment'
 
 class CalendarHeader extends Component {
@@ -16,18 +16,6 @@ class CalendarHeader extends Component {
                         </Text>
                     </View>
                 )}
-            </View>
-        )
-    }
-}
-
-class MonthHeader extends Component {
-    render() {
-        const {year, month} = this.props
-
-        return (
-            <View style={styles.monthHeader}>
-                <Text style={styles.monthHeaderText}>{year}年{month + 1}月</Text>
             </View>
         )
     }
@@ -51,17 +39,22 @@ class MonthBodyCell extends Component {
         ]
 
         return (
-            <TouchableOpacity style={styles.monthBodyCell} activeOpacity={1} onPress={onPress ? () => onPress(dayInfo) : null}>
+            <TouchableOpacity style={styles.monthBodyCell} activeOpacity={1} onPress={!dayInfo.disabled && onPress ? () => onPress(dayInfo) : null}>
                 <View style={cellDateStyle}>
                     <Text style={cellDateTextStyle}>
                         {dayInfo.holiday ? dayInfo.holiday : dayInfo.dateText}
                     </Text>
                 </View>
-                <View style={[styles.monthBodyCellNote]}>
-                    <Text style={[styles.text, styles.monthBodyCellNoteText]}>
-                        {dayInfo.note}
-                    </Text>
-                </View>
+                {
+                    dayInfo.note && dayInfo.note !== ''
+                    ?
+                    <View style={[styles.monthBodyCellNote]}>
+                        <Text style={[styles.text, styles.monthBodyCellNoteText]}>
+                            {dayInfo.note}
+                        </Text>
+                    </View>
+                    : null
+                }
             </TouchableOpacity>
         )
     }
@@ -112,12 +105,14 @@ class MonthBody extends Component {
         )
     }
     addFeature(featureName, featureContent, dayCells) {
-        Object.keys(featureContent).map((date) => {
-            const formatDate = moment(date, this.props.parseFormat).format(this.props.displayFormat)
-            if(dayCells[formatDate]){
-                dayCells[formatDate][featureName] = featureContent[date]
-            }
-        })
+        if(featureContent){
+            Object.keys(featureContent).map((date) => {
+                const formatDate = moment(date, this.props.parseFormat).format(this.props.displayFormat)
+                if(dayCells[formatDate]){
+                    dayCells[formatDate][featureName] = featureContent[date]
+                }
+            })
+        }
     }
 }
 MonthBody.defaultProps = {
@@ -126,45 +121,73 @@ MonthBody.defaultProps = {
 }
 
 class Calendar extends Component {
-    render() {
+    constructor(props) {
+        super(props)
+
+        this.state = {
+            dataSource: new ListView.DataSource({
+                rowHasChanged: (r1, r2) => r1 !== r2,
+                sectionHeaderHasChanged: (s1, s2) => s1 !== s2
+            })
+        }
+    }
+
+    componentWillMount() {
         let {startTime, endTime} = this.props
         startTime = moment.isMoment(startTime) ? startTime : moment(startTime)
         endTime = moment.isMoment(endTime) ? endTime : moment(endTime)
 
         // generate months
-        let months = [],
-            stickyHeaderIndices = []
+        let months = {}
 
         while(endTime.isSameOrAfter(startTime, 'day')){
-            months = [
-                ...months,
-                {
-                    type: 'header',
-                    year: startTime.year(),
-                    month: startTime.month()
-                },
-                {
-                    type: 'body',
-                    year: startTime.year(),
-                    month: startTime.month()
-                }
-            ]
-            stickyHeaderIndices = [
-                ...stickyHeaderIndices,
-                stickyHeaderIndices.length * 2
-            ]
+            const year = startTime.year(),
+                month = startTime.month(),
+                date = year + '年' + (month + 1) + '月'
+
+            months[date] = {
+                date: year + "," + month
+            }
             startTime = startTime.add(1, 'month')
         }
+
+        this.setState({
+            dataSource: this.state.dataSource.cloneWithRowsAndSections(months),
+            loaded: true
+        })
+    }
+
+    render() {
         return (
             <View style={styles.container}>
                 <CalendarHeader />
-                <ScrollView stickyHeaderIndices={stickyHeaderIndices} automaticallyAdjustContentInsets={false}>
-                    {months.map((monthItem, i) =>
-                        monthItem.type === 'header'
-                        ? <MonthHeader key={i} year={monthItem.year} month={monthItem.month}/>
-                        : <MonthBody key={i} year={monthItem.year} month={monthItem.month} {...this.props}/>
-                    )}
-                </ScrollView>
+                <ListView
+                    automaticallyAdjustContentInsets={false}
+                    initialListSize={1}
+                    showsVerticalScrollIndicator={false}
+                    dataSource={this.state.dataSource}
+                    renderSectionHeader={this.renderSectionHeader}
+                    renderRow={this.renderRow.bind(this)}
+                />
+            </View>
+        )
+    }
+
+    renderRow(rowData) {
+        const year = Number(rowData.split(',')[0]),
+            month = Number(rowData.split(',')[1])
+
+        return (
+            <View>
+                <MonthBody year={year} month={month} {...this.props}/>
+            </View>
+        );
+    }
+
+    renderSectionHeader(sectionData, sectionID) {
+        return (
+            <View style={styles.monthHeader}>
+                <Text style={styles.monthHeaderText}>{sectionID}</Text>
             </View>
         )
     }
@@ -174,10 +197,14 @@ Calendar.defaultProps = {
     endTime: moment().add(5, 'month')
 }
 
-const DateCellSize = (Dimensions.get('window').width - 1) / 7
+const sidePadding = 5,
+    DateCellSize = (Dimensions.get('window').width - (sidePadding * 2 + 1)) / 7
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        paddingLeft: sidePadding,
+        paddingRight: sidePadding,
     },
 
     // common
@@ -209,8 +236,10 @@ const styles = StyleSheet.create({
         height: 40,
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
         borderBottomWidth: 1 / PixelRatio.get(),
         borderBottomColor: '#dce1e6',
+        backgroundColor: '#fff',
     },
     monthHeaderText: {
         fontSize: 18,
@@ -220,14 +249,15 @@ const styles = StyleSheet.create({
     monthBody: {
         flexDirection: 'row',
         flexWrap: 'wrap',
+        overflow: 'hidden',
     },
 
     // month body cell
     monthBodyCell: {
         width: DateCellSize,
         height: DateCellSize + 15,
+        marginTop: 10,
         alignItems: 'center',
-        justifyContent: 'center',
     },
     monthBodyCellDate: {
         width: DateCellSize,
@@ -236,7 +266,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     monthBodyCellNote: {
-        height: 20,
+        height: 15,
         alignItems: 'center',
         justifyContent: 'center',
     },

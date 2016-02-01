@@ -1,6 +1,6 @@
 {
   "name": "fastui-calendar",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "A calendar component built with React Native ",
   "main": "index.js",
   "scripts": {
