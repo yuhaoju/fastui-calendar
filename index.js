@@ -1,7 +1,8 @@
-'use strict'
+'use strict';
 
-import React, {Component, StyleSheet, Text, View, PixelRatio, Dimensions, TouchableOpacity, ListView} from 'react-native'
-import moment from 'moment'
+import React, {Component} from 'react';
+import {StyleSheet, Text, View, PixelRatio, Dimensions, TouchableOpacity, ListView} from 'react-native';
+import moment from 'moment';
 
 class CalendarHeader extends Component {
     render() {
